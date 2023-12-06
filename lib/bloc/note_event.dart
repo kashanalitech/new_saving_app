@@ -59,28 +59,44 @@ class SearchNotes extends NoteEvent {
   List<Object?> get props => [query];
 }
 
-class ToggleFlagStatus extends NoteEvent {
-  final NoteEntity note;
-
-  const ToggleFlagStatus({required this.note});
-
-  @override
-  List<Object?> get props => [note];
-}
-
 class MoveNoteToTop extends NoteEvent {
   final NoteEntity note;
+  final bool isSelected; // Add this property
 
-  const MoveNoteToTop({required this.note});
+
+  const MoveNoteToTop({
+    required this.note,
+    this.isSelected = true, // Default value assumes the note is selected
+  });
 
   @override
   List<Object?> get props => [note];
 }
 
-class UpdateNoteTitle extends NoteEvent {
-  final NoteEntity note;
-  final String newTitle;
+class DeleteNoteById extends NoteEvent {
+  final int noteId;
 
-  UpdateNoteTitle({required this.note, required this.newTitle});
+  DeleteNoteById({required this.noteId});
+
+  @override
+  List<Object?> get props => [noteId];
 }
 
+class EditNote extends NoteEvent {
+  final NoteEntity editedNote;
+
+  EditNote({required this.editedNote});
+
+  @override
+  List<Object> get props => [editedNote];
+}
+
+// class UpdateNoteTitle extends NoteEvent {
+//   final NoteEntity note;
+//   final String newTitle;
+//
+//   UpdateNoteTitle({
+//     required this.note,
+//     required this.newTitle,
+//   });
+// }

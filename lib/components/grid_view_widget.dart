@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -11,7 +13,6 @@ import 'note_item.dart'; // Import the NoteItem widget
 
 class GridViewWidget extends StatelessWidget {
   final List<NoteEntity> notes;
-  // final Function(NoteEntity) onNoteSelected;
 
   GridViewWidget({
     required this.notes,
@@ -20,6 +21,7 @@ class GridViewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final noteBloc = BlocProvider.of<NoteBloc>(context);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -31,6 +33,7 @@ class GridViewWidget extends StatelessWidget {
       itemCount: notes.length,
       itemBuilder: (context, index) {
         final note = notes[index];
+        String convertedContent = convertJsonToString(note);
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
@@ -38,14 +41,19 @@ class GridViewWidget extends StatelessWidget {
             children: [
               Column(
                 children: [
-                  Text(note.title, style: CustomTextStyle.mediumBlack(context)),
+                  Text(
+                    note.title,
+                    style: CustomTextStyle.mediumBlack(context),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                   Padding(
                     padding: const EdgeInsets.only(top: 5),
                     child: Text(DateFormat('yyyy-MM-dd').format(note.date)),
                   ),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 10),
               Container(
                 height: Helper.getHeight(context) * 0.19,
                 // Adjust the height as needed
@@ -69,40 +77,45 @@ class GridViewWidget extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
-                        note.content,
+                        convertedContent,
+                        // note.content,
                         maxLines: 5,
                         overflow: TextOverflow.ellipsis,
                         style: CustomTextStyle.smallBlack(context),
                         // style: const TextStyle(fontSize: 13.0),
                       ),
                     ),
-                     Expanded(
+                    Expanded(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           GestureDetector(
-                            onTap: (){
+                            onTap: () {
                               // onNoteSelected(note);
-                              BlocProvider.of<NoteBloc>(context).add(MoveNoteToTop(note: note));
+                              // BlocProvider.of<NoteBloc>(context).add(MoveNoteToTop(note: note));
+                              noteBloc.add(MoveNoteToTop(note: note));
                               // BlocProvider.of<NoteBloc>(context).add(ToggleFlagStatus(note: note));
                             },
                             child: Icon(
                               Icons.flag_circle_rounded,
                               size: 35,
-                              color: note.isFlagged ? Colors.black : Colors.grey,
+                              color: note.isFlagged == 1
+                                  ? Colors.black
+                                  : Colors.grey,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: (){
-                              showEditDialog(context,note);
-                            },
-                            child: const Icon(
-                              Icons.edit_note,
-                              size: 35,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          PopupIcon(note: note, noteBloc: noteBloc),
+                          // GestureDetector(
+                          //   onTap: (){
+                          //     // showEditDialog(context,note);
+                          //   },
+                          //   child: const Icon(
+                          //     Icons.edit_note,
+                          //     size: 35,
+                          //     color: Colors.grey,
+                          //   ),
+                          // ),
                         ],
                       ),
                     )
@@ -114,5 +127,17 @@ class GridViewWidget extends StatelessWidget {
         );
       },
     );
+  }
+
+  String convertJsonToString(NoteEntity note) {
+    List<dynamic> parsedJson = jsonDecode(note.content);
+    String resultString = '';
+
+    for (var item in parsedJson) {
+      if (item.containsKey('insert')) {
+        resultString += item['insert'];
+      }
+    }
+    return resultString;
   }
 }

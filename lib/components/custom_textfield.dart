@@ -51,6 +51,7 @@ class customField extends StatelessWidget {
             border: InputBorder.none,
             hintStyle: CustomTextStyle.largeBlack(context)
           ),
+          cursorColor: Colors.black,
         ),
         // alignment: align ?? Alignment.center,
       ),

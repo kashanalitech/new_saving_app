@@ -1,12 +1,12 @@
+
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_quill/flutter_quill.dart' hide Text;
 import 'package:new_saving_app/bloc/note_bloc.dart';
-import 'package:new_saving_app/database/note_database.dart';
-import 'package:new_saving_app/note_repository.dart';
-import 'package:uuid/uuid.dart';
+
 
 import '../bloc/note_event.dart';
 import '../bloc/note_state.dart';
@@ -16,13 +16,16 @@ import '../constants/helper.dart';
 import '../model/note.dart';
 
 class NotepadWidget extends StatefulWidget {
+  final NoteEntity? note;
+
+  const NotepadWidget({super.key, this.note});
   @override
   _NotepadWidgetState createState() => _NotepadWidgetState();
 }
 
 class _NotepadWidgetState extends State<NotepadWidget> {
-  final QuillController _controller = QuillController.basic();
-  final TextEditingController titleController = TextEditingController();
+   QuillController _controller = QuillController.basic();
+   TextEditingController titleController = TextEditingController();
   List<NoteEntity> notes = [];
   late final QuillController controller;
   bool _isBold = false;
@@ -80,62 +83,102 @@ class _NotepadWidgetState extends State<NotepadWidget> {
     );
   }
 
-  void addData(List<NoteEntity> notes, BuildContext context) {
-    String title = titleController.text.toString();
-    String content = _controller.document.toPlainText();
-    DateTime date = DateTime.now();
-    // final nextId = notes.isNotEmpty ? notes.map((note) => note.id).reduce(max) + 1 : 1;
 
-    // Create a new NoteEntity instance without specifying the id
-    NoteEntity newNote = NoteEntity(
-      // id: nextId,
-      title: title,
-      date: date,
-      content: content,
-    );
-    // print(Nextid);
+   @override
+   void initState() {
+     super.initState();
+     titleController = TextEditingController(text: widget.note?.title);
+     _controller = QuillController.basic();
+     loadContent();
+   }
 
-    // Add the new note to the list
-    // notes.add(newNote);
+   void loadContent() {
 
-
-    // Access the NoteBloc
-    final noteBloc = BlocProvider.of<NoteBloc>(context);
-
-    // Add the new note to the bloc
-    noteBloc.add(AddNote(newNote));
-
-        Navigator.pop(context);
+     var oldNoteContent ;
+     if (widget.note != null) {
+       if (widget.note!.content.isEmpty) {
+         oldNoteContent = '';
+         _controller = QuillController(
+           document: Document()..insert(0, oldNoteContent),
+           selection: const TextSelection.collapsed(offset: 0),
+         );
+       } else {
+         oldNoteContent = jsonDecode(widget.note!.content);
+         _controller.document = Document.fromJson(oldNoteContent);
+       }
+     }
 
 
-    // Return the new id (not needed anymore, you can remove this line)
-    // return newId;
-  }
+     // final json = jsonDecode(r'{"insert":"hello\n"}');
+     //
+     //
+     // _controller = QuillController(
+     //   document: Document.fromJson(json),
+     //   selection: const TextSelection.collapsed(offset: 0),
+     //
+     // );
+   }
 
 
-  // int addData(
-  // // final id = notes.isNotEmpty ? notes.map((note) => note.id).reduce(max) + 1 : 1;
-  // String title,
-  // // titleController.text.toString(); // Replace this with the actual title
-  // String content,
-  // // _controller.document.toPlainText(); // Get the content from Quill
-  // DateTime date ,
-  // ) {
-  //   NoteEntity newNote = NoteEntity(
-  //     title: title,
-  //     content: content,
-  //     date: date,
-  //   );
-  //   final noteBloc = BlocProvider.of<NoteBloc>(context);
-  //   return noteRepository.saveNote(newNote);
+   void saveNotes() {
+     String title = titleController.text;
+     // String content = _controller.document.toPlainText(); // Get plain text content
+     final content = jsonEncode(_controller.document.toDelta().toJson());
+     DateTime date = DateTime.now();
+
+     if (titleController.text.isNotEmpty) {
+       if (widget.note == null) {
+         // Add note
+         NoteEntity newNote = NoteEntity(
+           title: title,
+           date: date,
+           content: content,
+           isFlagged: 0,
+           position: 0,
+         );
+
+         BlocProvider.of<NoteBloc>(context).add(AddNote(newNote));
+       } else {
+         // Edit note
+         NoteEntity editedNote = NoteEntity(
+           id: widget.note!.id,
+           title: title,
+           date: DateTime.now(),
+           content: content,
+           isFlagged: 1,
+           position: 1,
+
+         );
+         BlocProvider.of<NoteBloc>(context).add(
+             EditNote(editedNote: editedNote));
+       }
+       Navigator.pop(context); // Close the NotePad screen
+     }
+   }
+
+  // void saveNote(List<NoteEntity> notes, BuildContext context) {
+  //   String title = titleController.text.toString();
+  //   String content = _controller.document.toPlainText();
+  //   DateTime date = DateTime.now();
   //
-  //   // Add the new note to the list
-  // // return  notes.add(newNote);
+  //   // Create a new NoteEntity instance without specifying the id
+  //  if(titleController.text.isNotEmpty) {
+  //    NoteEntity newNote = NoteEntity(
+  //      title: title,
+  //      date: date,
+  //      content: content,
+  //    );
   //
-  //   // You can also clear the Quill editor after saving if needed
-  //   // _controller.document.clear();
-  //   // return ;
+  //    // Access the NoteBloc
+  //    final noteBloc = BlocProvider.of<NoteBloc>(context);
+  //    // Add the new note to the bloc
+  //    noteBloc.add(AddNote(newNote));
+  //
+  //    Navigator.pop(context);
+  //  }
+  //
   // }
+
 
   void toggleBulletPoints() {
     setState(() {
@@ -205,7 +248,7 @@ class _NotepadWidgetState extends State<NotepadWidget> {
   void toggleIsItalic() {
     setState(() {
       _isItalic = !_isItalic;
-      if (_isBold) {
+      if (_isItalic) {
         _controller.formatSelection(Attribute.italic);
       } else {
         _controller.formatSelection(Attribute.clone(Attribute.italic, null));
@@ -216,7 +259,7 @@ class _NotepadWidgetState extends State<NotepadWidget> {
   void toggleUnderline() {
     setState(() {
       _isUnderline = !_isUnderline;
-      if (_isBold) {
+      if (_isUnderline) {
         _controller.formatSelection(Attribute.underline);
       } else {
         _controller.formatSelection(Attribute.clone(Attribute.underline, null));
@@ -264,9 +307,8 @@ class _NotepadWidgetState extends State<NotepadWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NoteBloc, NoteState>(
-        // stream: null,
-        builder: (context, snapshot) {
+      // return BlocBuilder<NoteBloc, NoteState>(
+      //     builder: (context, snapshot) {
       return Scaffold(
         body: SingleChildScrollView(
           child: SafeArea(
@@ -508,9 +550,9 @@ class _NotepadWidgetState extends State<NotepadWidget> {
                             padding: const EdgeInsets.all(10),
                             height: Helper.getHeight(context) * 0.4,
                             child: QuillEditor(
-                              // controller: _controller,
                               scrollController: ScrollController(),
                               configurations: const QuillEditorConfigurations(
+                                showCursor: true,
                                 readOnly: false,
                               ),
                               focusNode: FocusNode(),
@@ -523,6 +565,7 @@ class _NotepadWidgetState extends State<NotepadWidget> {
                   const Padding(padding: EdgeInsets.all(15)),
                   GestureDetector(
                     onTap: () async {
+                      saveNotes();
                       // int maxId = notes.isNotEmpty ? notes.map((note) => note.id).reduce(max) : 0;
                       // int newId = maxId + 1;
                       // addData(notes,context);
@@ -530,23 +573,22 @@ class _NotepadWidgetState extends State<NotepadWidget> {
 
                       // final newId = notes.isNotEmpty ? notes.map((note) => note.id).reduce(max) + 1 : 1;
                       // Save the note using the BLoC
-                        if (titleController.text.isNotEmpty) {
-                          NoteEntity newNote = NoteEntity(
-                            // id: newId,
-                            title: titleController.text,
-                            date: DateTime.now(),
-                            content: _controller.document.toPlainText(),
-                          );
-
-                          // Access the NoteBloc
-                          final noteBloc = BlocProvider.of<NoteBloc>(context);
-
-                          // Add the new note to the bloc
-                          noteBloc.add(AddNote(newNote));
-
-                          // Navigate back to the previous screen
-                          Navigator.pop(context);
-                        }
+                      //   if (titleController.text.isNotEmpty) {
+                      //     NoteEntity newNote = NoteEntity(
+                      //       title: titleController.text,
+                      //       date: DateTime.now(),
+                      //       content: _controller.document.toPlainText(),
+                      //     );
+                      //
+                      //     // Access the NoteBloc
+                      //     final noteBloc = BlocProvider.of<NoteBloc>(context);
+                      //
+                      //     // Add the new note to the bloc
+                      //     noteBloc.add(AddNote(newNote));
+                      //
+                      //     // Navigate back to the previous screen
+                      //     Navigator.pop(context);
+                      //   }
                     },
                     child: Text('Saved',
                         style: CustomTextStyle.largegrey(context)),
@@ -559,7 +601,7 @@ class _NotepadWidgetState extends State<NotepadWidget> {
           ),
         ),
       );
-    });
+    // });
   }
 
   Widget buildCustomIcon({

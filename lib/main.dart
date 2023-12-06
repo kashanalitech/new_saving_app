@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:new_saving_app/screens/main_screen.dart';
@@ -10,8 +11,7 @@ import 'locator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   // await
-   setupLocator();
+    setupLocator();
 
   // runApp(const MyApp());
   runApp(
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: RouteNames.main,
+      initialRoute: RouteNames.demo,
       routes: routes,
       onUnknownRoute: (settings) => MaterialPageRoute(
         builder: (_) => const MainScreen(),

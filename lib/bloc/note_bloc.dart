@@ -6,7 +6,7 @@
 //
 // import '../note_repository.dart';
 //
-// class NoteBloc extends Bloc<NoteEvent, NoteState> {
+// cl extends Bloc<NoteEvent, NoteState> {
 //   final NoteRepository noteRepository;
 //
 //   NoteBloc({required this.noteRepository}) : super(NoteInitial());
@@ -109,15 +109,20 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       } catch (e) {
         yield NoteError(message: 'Failed to load notes: $e');
       }
-    } else if (event is AddNote) {
+    }
+
+    else if (event is AddNote) {
       try {
         await noteRepository.saveNote(event.note);
         final updatedNotes = await noteRepository.getNotes();
+        // updatedNotes.sort((a, b) => b.date.compareTo(a.date));
         yield NoteLoaded(notes: updatedNotes);
       } catch (e) {
         yield NoteError(message: 'Failed to add note: $e');
       }
-    } else if (event is SearchNotes) {
+    }
+
+    else if (event is SearchNotes) {
       try {
         final query = event.query;
         final allNotes = await noteRepository.getNotes();
@@ -129,73 +134,73 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       } catch (e) {
         yield NoteError(message: 'Failed to search notes: $e');
       }
-    // }
-    // else if (event is ToggleFlagStatus) {
-    //   final notes = await noteRepository.getNotes();
-    //   // Toggle the flag status for the note
-    //   final updatedNotes = NoteLoaded(notes: notes).notes.map((note) {
-    //     if (note.id == event.note.id) {
-    //       return NoteEntity(
-    //         id: note.id,
-    //         title: note.title,
-    //         date: note.date,
-    //         content: note.content,
-    //         isFlagged: !note.isFlagged,
-    //       );
-    //     } else {
-    //       return note;
-    //     }
-    //   }).toList();
-    //   yield NoteLoaded(notes: updatedNotes);
-    } else if (event is MoveNoteToTop) {
+    }
+
+    else if (event is EditNote) {
+      try {
+        await noteRepository.saveNote(event.editedNote);
+        final updatedNotes = await noteRepository.getNotes();
+        yield NoteLoaded(notes: updatedNotes);
+      } catch (e) {
+        yield NoteError(message: 'Failed to edit note: $e');
+      }
+    }
+
+    else if (event is MoveNoteToTop) {
       try {
         final notes = await noteRepository.getNotes();
         final List<NoteEntity> updatedNotes = List.from(notes);
 
         // Find the index of the selected note
         final index = updatedNotes.indexWhere((note) => note.id == event.note.id);
-
         if (index != -1) {
           // Move the note to the top
           final movedNote = updatedNotes.removeAt(index);
-          movedNote.isFlagged = !movedNote.isFlagged;
+          movedNote.isFlagged = (movedNote.isFlagged==1) ? 0 : 1;
           movedNote.position = DateTime.now().millisecondsSinceEpoch;
           updatedNotes.insert(0, movedNote);
+        }
+        // Update the position for all notes and save them
+        for (final updatedNote in updatedNotes) {
+          await noteRepository.saveNote(updatedNote);
         }
         // Sort the notes based on position in descending order
         updatedNotes.sort((a, b) => b.position!.compareTo(a.position!));
 
-        // Update the position for all notes and save them
-        // for (final updatedNote in updatedNotes) {
-          await noteRepository.saveNotes(updatedNotes);
-        // }
-
-
-        yield NoteLoaded(notes: updatedNotes);
-        // await noteRepository.saveNotes(updatedNotes);
+        yield NoteLoaded(notes:  updatedNotes);
       } catch(e){
         yield NoteError(message: 'Failed to move note to top: $e');
       }
 
-    } else if (event is UpdateNoteTitle) {
-      if (state is NoteLoaded) {
-        final updatedNotes = (state as NoteLoaded).notes.map((note) {
-          if (note == event.note) {
-            return NoteEntity(
-              id: note.id,
-              title: event.newTitle, // Update the title
-              date: note.date,
-              content: note.content,
-              isFlagged: note.isFlagged,
-            );
-          } else {
-            return note;
-          }
-        }).toList();
+    // } else if (event is UpdateNoteTitle) {
+    //   if (state is NoteLoaded) {
+    //     final updatedNotes = (state as NoteLoaded).notes.map((note) {
+    //       if (note == event.note) {
+    //         return NoteEntity(
+    //           id: note.id,
+    //           title: event.newTitle, // Update the title
+    //           date: note.date,
+    //           content: note.content,
+    //           isFlagged: note.isFlagged,
+    //         );
+    //       } else {
+    //         return note;
+    //       }
+    //     }).toList();
+    //     yield NoteLoaded(notes: updatedNotes);
+    //
+    //     await noteRepository.updateNoteTitle(event.note.id, event.newTitle);
+    //
+    //   }
+    }
+
+    else if (event is DeleteNoteById) {
+      try {
+        await noteRepository.deleteNoteById(event.noteId);
+        final updatedNotes = await noteRepository.getNotes();
         yield NoteLoaded(notes: updatedNotes);
-
-        await noteRepository.updateNoteTitle(event.note.id, event.newTitle);
-
+      } catch (e) {
+        yield NoteError(message: 'Failed to delete note: $e');
       }
     }
   }

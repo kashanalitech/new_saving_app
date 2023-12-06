@@ -26,7 +26,7 @@ final routes = <String, WidgetBuilder>{
   RouteNames.register: (_) => const RegisterScreen(),
   RouteNames.login: (_) =>  NotepadWidget(),
   RouteNames.home: (_) => const HomeScreen(),
-  RouteNames.demo: (_) =>    QuillEditorPage(),
+  RouteNames.demo: (_) =>    MyApp(),
   RouteNames.notes: (_) =>     const NotesScreen(),
   RouteNames.setting: (_) =>  const SettingScreen(),
 };

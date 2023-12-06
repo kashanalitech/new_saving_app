@@ -9,16 +9,17 @@ class NoteRepository {
   NoteRepository({required this.noteDatabase});
 
   Future<void> saveNote(NoteEntity note) async {
+    // note.position = DateTime.now().millisecondsSinceEpoch;
     await noteDatabase.noteDao.saveNote(note);
   }
 
-  Future<void> saveNotes(List<NoteEntity> notes) async {
-    // Save a list of notes (if needed)
-    for (var note in notes) {
-      // await saveNote(note);
-      await noteDatabase.noteDao.saveNote(note);
-    }
-  }
+  // Future<void> saveNotes(List<NoteEntity> notes) async {
+  //   // Save a list of notes (if needed)
+  //   for (var note in notes) {
+  //     // await saveNote(note);
+  //     await noteDatabase.noteDao.saveNote(note);
+  //   }
+  // }
 
   // Future<List<NoteEntity>> getNotes() async {
   //   return await noteDatabase.noteDao.getNotes();
@@ -34,22 +35,30 @@ class NoteRepository {
     }
   }
 
-  Future<void> updateNoteTitle(int? noteId, String newTitle) async {
-    try{
-      await noteDatabase.noteDao.updateNoteTitle(noteId!, newTitle);
-    }
-    catch (e){
-      print('not right now: $e');
-    }
-    }
+  // Future<void> updateNoteTitle(int? noteId, String newTitle) async {
+  //   try{
+  //     await noteDatabase.noteDao.updateNoteTitle(noteId!, newTitle);
+  //   }
+  //   catch (e){
+  //     print('not edit right now: $e');
+  //   }
+  //   }
 
-  Future<void> updateNoteFlagStatus(int? noteId, bool isFlagged) async {
-    await noteDatabase.noteDao.updateFlagStatus(noteId!, isFlagged);
+  Future<void> deleteNoteById(int noteId) async {
+    try {
+      await noteDatabase.noteDao.deleteNoteById(noteId);
+    } catch (e) {
+      print('Error deleting note: $e');
+    }
   }
 
-  Future<void> updateNotePosition(int? noteId, int position) async {
-    await noteDatabase.noteDao.updateNotePosition(noteId!, position);
-  }
+  // Future<void> updateNoteFlagStatus(int? noteId, bool isFlagged) async {
+  //   await noteDatabase.noteDao.updateFlagStatus(noteId!, isFlagged);
+  // }
+  //
+  // Future<void> updateNotePosition(int? noteId, int position) async {
+  //   await noteDatabase.noteDao.updateNotePosition(noteId!, position);
+  // }
 }
   // Future<void> updateNoteTitle(NoteEntity note) async {
   //   await noteDatabase.noteDao.saveNote(note);

@@ -11,9 +11,9 @@ class NoteEntity {
   final String title;
   @TypeConverters([DateTimeConverter])
   @ColumnInfo(name: 'date_millis')
-  final DateTime date;
+   final DateTime date;
   final String content;
-  bool isFlagged;
+  int isFlagged;
   int? position; // Add this line for the position
 
 
@@ -23,15 +23,12 @@ class NoteEntity {
     required this.title,
     required this.date,
     required this.content,
-    this.isFlagged = false,
-    this.position = 0, // Default value for the position
-
+    required this.isFlagged,
+     this.position,
   });
-
 }
 
 // datetime_converter.dart
-
 
 class DateTimeConverter extends TypeConverter<DateTime, int> {
   @override

@@ -39,7 +39,6 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // List<String> noteMonths = getNoteMonths(notes);
     List<String> noteMonths = getNoteMonths(notes);
     final noteBloc = BlocProvider.of<NoteBloc>(context);
 
@@ -279,7 +278,7 @@ class _NotesScreenState extends State<NotesScreen> {
       String month = DateFormat('MMMM yyyy').format(note.date);
       uniqueMonths.add(month);
     }
-    List<String> sortedMonths = uniqueMonths.toList()..sort();
+    List<String> sortedMonths = uniqueMonths.toList()..sort((a, b) => DateFormat('MMMM yyyy').parse(b).compareTo(DateFormat('MMMM yyyy').parse(a)));
     return sortedMonths;
   }
 
